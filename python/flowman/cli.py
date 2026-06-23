@@ -18,17 +18,23 @@ def main():
 @main.command()
 @click.option('--config', '-c', type=click.Path(exists=True), help='Config file path')
 @click.option('--env', '-e', default='uat', help='Environment to use')
-def tui(config, env):
+@click.option('--theme', default='cyberpunk', help='UI theme (cyberpunk or default)')
+def tui(config, env, theme):
     """Launch the interactive TUI (fully clickable!)"""
     click.echo(f"🚀 Starting Flowman TUI...")
     if config:
         click.echo(f"   Config: {config}")
     click.echo(f"   Environment: {env}")
+    click.echo(f"   Theme: {theme}")
     click.echo()
     click.echo("💡 Tip: You can click anywhere with your mouse!")
     click.echo()
 
-    from flowman.app import run as run_tui
+    if theme == 'cyberpunk':
+        from flowman.app_cyberpunk import run as run_tui
+    else:
+        from flowman.app import run as run_tui
+
     run_tui(config_path=config, env_name=env)
 
 
