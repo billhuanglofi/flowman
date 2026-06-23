@@ -37,14 +37,14 @@ class AppHeader(Horizontal):
 
     DEFAULT_CSS = """
     AppHeader {
-        height: 3;
+        height: 1;
         background: $panel;
-        padding: 1 2;
+        padding: 0 2;
         dock: top;
     }
 
     AppHeader Label {
-        padding: 0 2;
+        padding: 0 2 0 0;
         text-style: bold;
     }
     """
@@ -78,11 +78,14 @@ class CollectionBrowser(Container):
     CollectionBrowser .env-buttons {
         padding: 1;
         height: auto;
+        layout: horizontal;
     }
 
     CollectionBrowser Button {
-        width: 100%;
-        margin: 0 0 1 0;
+        min-width: 8;
+        height: 1;
+        padding: 0 2;
+        margin: 0 1 0 0;
     }
     """
 
@@ -93,7 +96,7 @@ class CollectionBrowser(Container):
 
     def compose(self) -> ComposeResult:
         yield Label("Environments", classes="section-title")
-        with Vertical(classes="env-buttons"):
+        with Horizontal(classes="env-buttons"):
             for env in self.workspace.environments:
                 variant = "primary" if env.name == self.current_env else "default"
                 yield Button(env.name.upper(), variant=variant, id=f"env-{env.name}", classes="env-btn")
@@ -111,18 +114,25 @@ class RequestDetailsPanel(Vertical):
 
     DEFAULT_CSS = """
     RequestDetailsPanel {
-        height: auto;
+        height: 8;
         background: $panel;
         padding: 1 2;
         border-bottom: solid $primary;
     }
 
     RequestDetailsPanel Label {
-        padding: 0 0 1 0;
+        padding: 0 0 0 0;
+    }
+
+    RequestDetailsPanel Static {
+        padding: 0;
+        height: 1;
     }
 
     RequestDetailsPanel Button {
         margin: 1 0 0 0;
+        height: 1;
+        min-width: 16;
     }
     """
 
