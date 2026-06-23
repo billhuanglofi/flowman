@@ -1,0 +1,327 @@
+/* Flowman SCSS - Adapted from Posting
+   A polished, compact TUI for API testing
+*/
+
+/* Global scrollbar styling */
+* {
+  scrollbar-color: $primary 10%;
+  scrollbar-color-hover: $primary 80%;
+  scrollbar-color-active: $primary;
+  scrollbar-background: $surface-darken-1;
+  scrollbar-background-hover: $surface-darken-1;
+  scrollbar-background-active: $surface-darken-1;
+  scrollbar-size-vertical: 1;
+
+  &:focus {
+    scrollbar-color: $primary 50%;
+  }
+}
+
+/* Main app container */
+Screen {
+  background: $background;
+}
+
+/* Header */
+AppHeader {
+  height: 1;
+  background: $panel;
+  padding: 0 2;
+  dock: top;
+
+  .app-title {
+    color: $accent;
+    text-style: bold;
+  }
+
+  .env-indicator {
+    color: $text-accent;
+    text-style: bold;
+    margin-left: 2;
+  }
+
+  .status {
+    color: $text-muted;
+    dock: right;
+  }
+}
+
+/* Collection Browser (left sidebar) */
+CollectionBrowser {
+  width: 40;
+  background: $surface 50%;
+  border-right: solid $accent 40%;
+
+  &:focus-within {
+    border-right: solid $accent;
+  }
+
+  .section-header {
+    height: 1;
+    background: $panel;
+    padding: 0 2;
+    color: $text-accent;
+    text-style: bold;
+  }
+
+  .env-buttons {
+    height: auto;
+    background: $surface;
+    padding: 0 1 1 1;
+
+    Button {
+      height: 1;
+      min-width: 8;
+      padding: 0 2;
+      margin: 0 1 0 0;
+      background: $panel;
+      color: $text-muted;
+      border: none;
+
+      &:hover {
+        background: $primary-muted;
+        color: $text;
+      }
+
+      &.active {
+        background: $accent;
+        color: $background;
+        text-style: bold;
+      }
+    }
+  }
+}
+
+/* Request tree styling */
+CollectionTree {
+  background: $surface 50%;
+  padding: 0 1;
+  height: 1fr;
+
+  Tree {
+    background: transparent;
+
+    &:focus {
+      border: none;
+    }
+  }
+
+  .tree--label {
+    color: $text;
+  }
+
+  TreeNode {
+    &--selected {
+      background: $accent-muted;
+      color: $text;
+      text-style: bold;
+    }
+
+    &:hover {
+      background: $primary-muted;
+    }
+  }
+}
+
+/* Request Editor */
+RequestEditor {
+  background: $surface 25%;
+  border: round $accent 40%;
+  height: 1fr;
+
+  &:focus-within {
+    border: round $accent;
+  }
+
+  .request-info {
+    height: auto;
+    background: $panel;
+    padding: 1 2;
+    border-bottom: solid $surface-darken-1;
+
+    .info-label {
+      color: $text-muted;
+    }
+
+    .info-value {
+      color: $text-accent;
+    }
+  }
+
+  Button.send {
+    height: 1;
+    min-width: 16;
+    background: $accent;
+    color: $background;
+    text-style: bold;
+    border: none;
+    margin: 1 0 0 0;
+
+    &:hover {
+      background: $primary;
+    }
+  }
+
+  TabbedContent {
+    height: 1fr;
+
+    Tabs {
+      height: 1;
+      background: $panel;
+
+      Tab {
+        color: $text-muted;
+
+        &.-active {
+          color: $accent;
+          text-style: bold;
+          background: $surface;
+        }
+
+        &:hover {
+          color: $text;
+        }
+      }
+
+      Underline {
+        color: $accent;
+      }
+    }
+
+    TabPane {
+      background: $surface;
+      padding: 1;
+    }
+  }
+
+  TextArea {
+    background: $surface;
+    height: 1fr;
+  }
+}
+
+/* Response Area */
+ResponseArea {
+  background: $surface 10%;
+  border: round $accent 40%;
+  height: 1fr;
+
+  &:focus-within {
+    border: round $accent;
+  }
+
+  .response-status {
+    height: auto;
+    background: $panel;
+    padding: 1 2;
+    border-bottom: solid $surface-darken-1;
+
+    .status-success {
+      color: $success;
+      text-style: bold;
+    }
+
+    .status-error {
+      color: $error;
+      text-style: bold;
+    }
+
+    .status-time {
+      color: $warning;
+    }
+
+    .status-size {
+      color: $text-muted;
+    }
+  }
+
+  TabbedContent {
+    height: 1fr;
+
+    Tabs {
+      height: 1;
+      background: $panel;
+
+      Tab {
+        color: $text-muted;
+
+        &.-active {
+          color: $accent;
+          text-style: bold;
+          background: $surface;
+        }
+      }
+    }
+  }
+
+  TextArea {
+    background: $surface;
+    height: 1fr;
+  }
+}
+
+/* Main layout */
+#main-container {
+  layout: horizontal;
+  height: 1fr;
+
+  #content-area {
+    layout: vertical;
+    width: 1fr;
+    padding: 1;
+
+    #request-panel {
+      height: 1fr;
+    }
+
+    #response-panel {
+      height: 1fr;
+    }
+  }
+}
+
+/* Footer */
+Footer {
+  background: $panel;
+  padding: 0 2;
+  height: 1;
+  dock: bottom;
+
+  .footer-key {
+    color: $accent;
+    text-style: bold;
+  }
+
+  .footer-description {
+    color: $text;
+  }
+}
+
+/* Compact mode adjustments */
+Flowman {
+  &.-compact {
+    AppHeader {
+      padding: 0 1;
+    }
+
+    CollectionBrowser .section-header {
+      padding: 0 1;
+    }
+
+    RequestEditor .request-info {
+      padding: 0 1;
+    }
+
+    ResponseArea .response-status {
+      padding: 0 1;
+    }
+
+    TabbedContent Tabs {
+      height: 1;
+
+      Underline {
+        display: none;
+      }
+    }
+  }
+}

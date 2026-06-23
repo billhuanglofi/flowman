@@ -18,7 +18,7 @@ def main():
 @main.command()
 @click.option('--config', '-c', type=click.Path(exists=True), help='Config file path')
 @click.option('--env', '-e', default='uat', help='Environment to use')
-@click.option('--theme', default='cyberpunk', help='UI theme (cyberpunk or default)')
+@click.option('--theme', default='posting', help='UI theme (posting, cyberpunk, or default)')
 def tui(config, env, theme):
     """Launch the interactive TUI (fully clickable!)"""
     click.echo(f"🚀 Starting Flowman TUI...")
@@ -27,13 +27,19 @@ def tui(config, env, theme):
     click.echo(f"   Environment: {env}")
     click.echo(f"   Theme: {theme}")
     click.echo()
-    click.echo("💡 Tip: You can click anywhere with your mouse!")
-    click.echo()
 
-    if theme == 'cyberpunk':
+    if theme == 'posting':
+        from flowman.app_posting import run as run_tui
+        click.echo("💎 Using Posting-based UI with SCSS theming")
+    elif theme == 'cyberpunk':
         from flowman.app_cyberpunk import run as run_tui
+        click.echo("🎨 Using Cyberpunk theme")
     else:
         from flowman.app import run as run_tui
+        click.echo("📦 Using default theme")
+
+    click.echo("💡 Tip: You can click anywhere with your mouse!")
+    click.echo()
 
     run_tui(config_path=config, env_name=env)
 
