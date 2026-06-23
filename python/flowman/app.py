@@ -41,8 +41,9 @@ class RequestList(Container):
     def compose(self) -> ComposeResult:
         yield Label("Requests", classes="panel-title")
         items = []
-        for req in self.workspace.requests:
-            items.append(ListItem(Label(f"{req.method} {req.name}"), id=f"req-{req.name}"))
+        for idx, req in enumerate(self.workspace.requests):
+            # Use index for ID to avoid spaces/special chars
+            items.append(ListItem(Label(f"{req.method} {req.name}"), id=f"req-{idx}"))
         yield ListView(*items, id="request-list")
 
 
