@@ -2,6 +2,7 @@ package tui
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
@@ -47,6 +48,24 @@ type Model struct {
 	importEndpoint string
 	importPath     string
 	importOutput   string
+	activeTab      responseTab
+	historyIndex   int
+	history        []historyEntry
+}
+
+type responseTab string
+
+const (
+	tabBody    responseTab = "body"
+	tabHeaders responseTab = "headers"
+	tabTrace   responseTab = "trace"
+)
+
+type historyEntry struct {
+	request       string
+	statusCode    int
+	duration      string
+	transactionID string
 }
 
 type inputMode string
@@ -75,7 +94,16 @@ type importCompleteMsg struct {
 
 func NewModel(preview Preview) Model {
 	environment, _ := selectedEnvironment(preview.Workspace, preview.SelectedEnv)
-	return Model{preview: preview, size: RenderSize{Width: 100, Height: 32}, environment: environment, status: statusReady, inputMode: inputModeNone}
+	return Model{
+		preview:      preview,
+		size:         RenderSize{Width: 100, Height: 32},
+		environment:  environment,
+		status:       statusReady,
+		inputMode:    inputModeNone,
+		activeTab:    tabBody,
+		history:      make([]historyEntry, 0, 20),
+		historyIndex: -1,
+	}
 }
 
 func NewWorkflowModel(workspace model.Workspace, options WorkflowOptions) Model {
@@ -87,12 +115,15 @@ func NewWorkflowModel(workspace model.Workspace, options WorkflowOptions) Model 
 		services:       options.Services,
 		environment:    environment,
 		status:         statusReady,
-		message:        "r run | t trace tx | i import safestore | up/down select | q quit",
+		message:        "r run | Ctrl+R replay | tab switch | j/k nav | e env | ? help | q quit",
 		inputMode:      inputModeNone,
 		importURL:      options.ImportURL,
 		importEndpoint: options.ImportEndpoint,
 		importPath:     options.ImportPath,
 		importOutput:   defaultImportOutput(options.ImportOutput),
+		activeTab:      tabBody,
+		history:        make([]historyEntry, 0, 20),
+		historyIndex:   -1,
 	}
 }
 
@@ -142,16 +173,34 @@ func (model Model) handleKey(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		key = "t"
 	case 'i':
 		key = "i"
+	case 'j':
+		key = "j"
+	case 'k':
+		key = "k"
+	case 'e':
+		key = "e"
+	case '?':
+		key = "?"
 	}
 	switch key {
 	case "q", "ctrl+c":
 		return model, tea.Quit
-	case "up":
+	case "up", "k":
 		model.moveSelection(-1)
-	case "down":
+	case "down", "j":
 		model.moveSelection(1)
+	case "tab":
+		model.nextTab()
+	case "shift+tab":
+		model.prevTab()
 	case "r":
 		return model.startRun()
+	case "ctrl+r":
+		return model.replayLast()
+	case "e":
+		return model.showEnvSwitcher()
+	case "?":
+		return model.showHelp()
 	case "t":
 		model.inputMode = inputModeTrace
 		model.inputBuffer = ""
@@ -216,6 +265,83 @@ func (model *Model) moveSelection(delta int) {
 	model.message = "Selected request changed"
 }
 
+func (model *Model) nextTab() {
+	switch model.activeTab {
+	case tabBody:
+		model.activeTab = tabHeaders
+	case tabHeaders:
+		model.activeTab = tabTrace
+	case tabTrace:
+		model.activeTab = tabBody
+	}
+	model.message = fmt.Sprintf("Switched to %s tab", model.activeTab)
+}
+
+func (model *Model) prevTab() {
+	switch model.activeTab {
+	case tabBody:
+		model.activeTab = tabTrace
+	case tabHeaders:
+		model.activeTab = tabBody
+	case tabTrace:
+		model.activeTab = tabHeaders
+	}
+	model.message = fmt.Sprintf("Switched to %s tab", model.activeTab)
+}
+
+func (model Model) replayLast() (tea.Model, tea.Cmd) {
+	if len(model.history) == 0 {
+		model.message = "No history to replay"
+		return model, nil
+	}
+	model.message = "Replaying last request..."
+	return model.startRun()
+}
+
+func (model Model) showEnvSwitcher() (tea.Model, tea.Cmd) {
+	// For now, just cycle through environments
+	envs := model.preview.Workspace.Environments
+	if len(envs) == 0 {
+		model.message = "No environments available"
+		return model, nil
+	}
+
+	currentIdx := -1
+	for i, env := range envs {
+		if env.Name == model.preview.SelectedEnv {
+			currentIdx = i
+			break
+		}
+	}
+
+	nextIdx := (currentIdx + 1) % len(envs)
+	model.preview.SelectedEnv = envs[nextIdx].Name
+	model.environment = envs[nextIdx]
+	model.message = fmt.Sprintf("Switched to environment: %s", envs[nextIdx].Name)
+	return model, nil
+}
+
+func (model Model) showHelp() (tea.Model, tea.Cmd) {
+	model.message = "Help: r=run | Ctrl+R=replay | Tab=switch tabs | j/k=nav | e=env | q=quit"
+	return model, nil
+}
+
+func (model *Model) addToHistory(request string, statusCode int, duration string, transactionID string) {
+	entry := historyEntry{
+		request:       request,
+		statusCode:    statusCode,
+		duration:      duration,
+		transactionID: transactionID,
+	}
+
+	// Keep last 20 entries
+	model.history = append([]historyEntry{entry}, model.history...)
+	if len(model.history) > 20 {
+		model.history = model.history[:20]
+	}
+	model.historyIndex = 0
+}
+
 func (model Model) startRun() (tea.Model, tea.Cmd) {
 	return startRun(model)
 }
@@ -249,6 +375,8 @@ func (model Model) viewState() ViewState {
 		ImportURL:      model.importURL,
 		ImportEndpoint: model.importEndpoint,
 		ImportPath:     model.importPath,
+		ActiveTab:      string(model.activeTab),
+		History:        model.history,
 	}
 }
 

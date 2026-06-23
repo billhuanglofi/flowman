@@ -42,8 +42,23 @@ func handleRunComplete(model Model, msg runCompleteMsg) (tea.Model, tea.Cmd) {
 		model.message = "Run error: " + safeText(msg.err.Error())
 		return model, nil
 	}
+
+	// Store full response for display
+	model.preview.FullResponse = msg.response
 	model.preview.Response = responsePreview(msg.response, msg.transactionID)
 	model.preview.RunState = "request run complete"
+
+	// Add to history
+	request, ok := selectedRequest(model.preview.Workspace, model.preview.Selected)
+	if ok {
+		model.addToHistory(
+			request.Name,
+			msg.response.StatusCode,
+			msg.response.Duration.String(),
+			msg.transactionID,
+		)
+	}
+
 	return model.startTrace(msg.transactionID)
 }
 

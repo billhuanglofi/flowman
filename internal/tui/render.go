@@ -18,11 +18,17 @@ type ViewState struct {
 	ImportURL      string
 	ImportEndpoint string
 	ImportPath     string
+	ActiveTab      string
+	History        []historyEntry
 }
 
 func RenderPreview(preview Preview, size RenderSize, states ...ViewState) string {
 	width := normalizedWidth(size.Width)
-	state := ViewState{Status: statusReady, Message: "r run | t trace tx | i import safestore | up/down select | q quit"}
+	state := ViewState{
+		Status:    statusReady,
+		Message:   "r run | Ctrl+R replay | tab switch | j/k nav | e env | ? help | q quit",
+		ActiveTab: string(tabBody),
+	}
 	if len(states) > 0 {
 		state = states[0]
 	}
@@ -33,10 +39,25 @@ func RenderPreview(preview Preview, size RenderSize, states ...ViewState) string
 	left := renderLists(preview, bodyWidth(width, 2))
 	right := renderSelected(preview, bodyWidth(width, 2))
 	body := lipgloss.JoinHorizontal(lipgloss.Top, left, " ", right)
-	response := renderResponse(preview, width)
-	journey := renderJourney(preview.Journey, width)
+
+	// Use new tabbed response view
+	response := renderResponseWithTabs(preview, state, width)
+
+	// Show history if available
+	var historyPanel string
+	if len(state.History) > 0 {
+		historyPanel = renderHistory(state.History, width)
+	}
+
 	footer := renderFooter(state, width)
-	return strings.Join([]string{header, body, response, journey, footer}, "\n")
+
+	parts := []string{header, body, response}
+	if historyPanel != "" {
+		parts = append(parts, historyPanel)
+	}
+	parts = append(parts, footer)
+
+	return strings.Join(parts, "\n")
 }
 
 func renderHeader(preview Preview) string {
@@ -173,6 +194,53 @@ func renderJourney(journey flowtrace.Journey, width int) string {
 		lines = append(lines, journeyRowStyle(row.DisplayLabel).Render(line))
 	}
 	return panelStyle.Width(width).Render(strings.Join(lines, "\n"))
+}
+
+func renderHistory(history []historyEntry, width int) string {
+	lines := []string{panelTitleStyle.Render("Recent History (Ctrl+R to replay)")}
+
+	if len(history) == 0 {
+		lines = append(lines, warningStyle.Render("No history yet"))
+		return panelStyle.Width(width).Render(strings.Join(lines, "\n"))
+	}
+
+	// Show last 5 entries
+	count := len(history)
+	if count > 5 {
+		count = 5
+	}
+
+	for i := 0; i < count; i++ {
+		entry := history[i]
+		statusStyle := bodyStyle
+		if entry.statusCode >= 200 && entry.statusCode < 300 {
+			statusStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("green"))
+		} else if entry.statusCode >= 400 {
+			statusStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("red"))
+		}
+
+		line := fmt.Sprintf("%s [%d] %s TX:%s",
+			entry.request,
+			entry.statusCode,
+			entry.duration,
+			truncate(entry.transactionID, 12))
+
+		if i == 0 {
+			line = "> " + line
+			lines = append(lines, lipgloss.NewStyle().Bold(true).Render(line))
+		} else {
+			lines = append(lines, statusStyle.Render("  "+line))
+		}
+	}
+
+	return panelStyle.Width(width).Render(strings.Join(lines, "\n"))
+}
+
+func truncate(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	return s[:maxLen-3] + "..."
 }
 
 func journeyLine(row flowtrace.JourneyRow) string {

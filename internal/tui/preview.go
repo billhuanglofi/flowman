@@ -23,14 +23,15 @@ type ResponsePreview struct {
 }
 
 type Preview struct {
-	Workspace   model.Workspace
-	SelectedEnv string
-	Selected    int
-	Response    ResponsePreview
-	RunState    string
-	TraceState  string
-	Journey     flowtrace.Journey
-	LoadError   error
+	Workspace    model.Workspace
+	SelectedEnv  string
+	Selected     int
+	Response     ResponsePreview
+	FullResponse runner.Response
+	RunState     string
+	TraceState   string
+	Journey      flowtrace.Journey
+	LoadError    error
 }
 
 type PreviewOptions struct {
