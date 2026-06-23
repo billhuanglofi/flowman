@@ -110,16 +110,14 @@ CollectionTree {
     color: $text;
   }
 
-  TreeNode {
-    &--selected {
-      background: $accent-muted;
-      color: $text;
-      text-style: bold;
-    }
+  .tree--cursor {
+    background: $accent-muted;
+    color: $text;
+    text-style: bold;
+  }
 
-    &:hover {
-      background: $primary-muted;
-    }
+  .tree--cursor:hover {
+    background: $primary-muted;
   }
 }
 
