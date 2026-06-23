@@ -13,11 +13,12 @@ from flowman.config import Request, Environment
 class MockResponse:
     """Mock response object"""
 
-    def __init__(self, status_code: int, headers: Dict, body: bytes, duration_ms: float):
+    def __init__(self, status_code: int, headers: Dict, body: bytes, duration_ms: float, trace: Dict = None):
         self.status_code = status_code
         self.headers = headers
         self.body = body
         self.duration_ms = duration_ms
+        self.trace = trace or {}
 
     @property
     def body_text(self) -> str:
@@ -41,17 +42,90 @@ class MockRunner:
         time.sleep(0.1 + (0.05 * (self.call_count % 3)))
         duration_ms = 100 + (50 * (self.call_count % 5))
 
+        # Generate trace data
+        trace = self._generate_trace(request, environment, duration_ms)
+
         # Generate mock response based on method
         if request.method == "GET":
-            return self._mock_get_response(request, duration_ms)
+            response = self._mock_get_response(request, duration_ms)
         elif request.method == "POST":
-            return self._mock_post_response(request, duration_ms)
+            response = self._mock_post_response(request, duration_ms)
         elif request.method == "PUT":
-            return self._mock_put_response(request, duration_ms)
+            response = self._mock_put_response(request, duration_ms)
         elif request.method == "DELETE":
-            return self._mock_delete_response(request, duration_ms)
+            response = self._mock_delete_response(request, duration_ms)
         else:
-            return self._mock_generic_response(request, duration_ms)
+            response = self._mock_generic_response(request, duration_ms)
+
+        # Add trace to response
+        response.trace = trace
+        return response
+
+    def _generate_trace(self, request: Request, environment: Environment, duration_ms: float) -> Dict:
+        """Generate realistic HTTP trace data"""
+        dns_time = 5 + (self.call_count % 10)
+        tcp_time = 15 + (self.call_count % 20)
+        tls_time = 25 + (self.call_count % 30)
+        server_time = duration_ms - dns_time - tcp_time - tls_time - 10
+        transfer_time = 5 + (self.call_count % 8)
+
+        return {
+            "request_id": f"req_{self.call_count:06d}",
+            "timestamps": {
+                "dns_start": 0,
+                "dns_end": dns_time,
+                "tcp_start": dns_time,
+                "tcp_end": dns_time + tcp_time,
+                "tls_start": dns_time + tcp_time,
+                "tls_end": dns_time + tcp_time + tls_time,
+                "request_start": dns_time + tcp_time + tls_time,
+                "request_end": dns_time + tcp_time + tls_time + server_time,
+                "response_start": dns_time + tcp_time + tls_time + server_time,
+                "response_end": duration_ms,
+            },
+            "timings": {
+                "dns_lookup": f"{dns_time:.1f}ms",
+                "tcp_connection": f"{tcp_time:.1f}ms",
+                "tls_handshake": f"{tls_time:.1f}ms",
+                "server_processing": f"{server_time:.1f}ms",
+                "content_transfer": f"{transfer_time:.1f}ms",
+                "total": f"{duration_ms:.1f}ms"
+            },
+            "network": {
+                "local_address": "192.168.1.100:54321",
+                "remote_address": f"{environment.base_url.replace('https://', '').replace('http://', '')}:443",
+                "protocol": "HTTP/2.0",
+                "tls_version": "TLSv1.3",
+                "cipher_suite": "TLS_AES_256_GCM_SHA384"
+            },
+            "request": {
+                "method": request.method,
+                "url": f"{environment.base_url}{request.path or request.endpoint}",
+                "headers_sent": len(request.headers or []) + 4,  # + standard headers
+                "body_size": "0 bytes" if request.method == "GET" else "256 bytes"
+            },
+            "response": {
+                "status_code": 200,
+                "headers_received": 8,
+                "body_size": f"{len(self._get_mock_body(request))} bytes",
+                "compressed": False
+            },
+            "events": [
+                {"time": 0, "event": "DNS lookup started", "detail": f"Resolving {environment.base_url}"},
+                {"time": dns_time, "event": "DNS lookup complete", "detail": "IP: 203.0.113.42"},
+                {"time": dns_time, "event": "TCP connection initiated", "detail": "Connecting to port 443"},
+                {"time": dns_time + tcp_time, "event": "TCP connection established", "detail": "3-way handshake complete"},
+                {"time": dns_time + tcp_time, "event": "TLS handshake started", "detail": "ClientHello sent"},
+                {"time": dns_time + tcp_time + tls_time, "event": "TLS handshake complete", "detail": "Using TLSv1.3"},
+                {"time": dns_time + tcp_time + tls_time, "event": "HTTP request sent", "detail": f"{request.method} {request.path or request.endpoint}"},
+                {"time": dns_time + tcp_time + tls_time + server_time, "event": "Response headers received", "detail": "Status: 200 OK"},
+                {"time": duration_ms, "event": "Response body received", "detail": "Transfer complete"},
+            ]
+        }
+
+    def _get_mock_body(self, request: Request) -> str:
+        """Get sample body for size calculation"""
+        return json.dumps({"status": "success", "data": {}}, indent=2)
 
     def _mock_get_response(self, request: Request, duration_ms: float) -> MockResponse:
         """Mock GET response"""

@@ -13,11 +13,12 @@ from flowman.config import Request, Environment
 class Response:
     """Response model"""
 
-    def __init__(self, status_code: int, headers: Dict, body: bytes, duration_ms: float):
+    def __init__(self, status_code: int, headers: Dict, body: bytes, duration_ms: float, trace: Dict = None):
         self.status_code = status_code
         self.headers = headers
         self.body = body
         self.duration_ms = duration_ms
+        self.trace = trace or {}
 
     @property
     def body_text(self) -> str:
@@ -48,7 +49,7 @@ class RequestRunner:
         # Build body
         body = self._build_body(request)
 
-        # Execute request
+        # Execute request with timing
         start = time.time()
 
         with httpx.Client(timeout=self.timeout) as client:
@@ -62,11 +63,31 @@ class RequestRunner:
 
         duration_ms = (time.time() - start) * 1000
 
+        # Generate basic trace (real implementation would use httpx events)
+        trace = {
+            "request": {
+                "method": request.method,
+                "url": url,
+                "headers_sent": len(headers),
+                "body_size": f"{len(body) if body else 0} bytes"
+            },
+            "response": {
+                "status_code": response.status_code,
+                "headers_received": len(response.headers),
+                "body_size": f"{len(response.content)} bytes",
+                "compressed": False
+            },
+            "timings": {
+                "total": f"{duration_ms:.1f}ms"
+            }
+        }
+
         return Response(
             status_code=response.status_code,
             headers=dict(response.headers),
             body=response.content,
             duration_ms=duration_ms,
+            trace=trace,
         )
 
     def _build_url(self, request: Request, environment: Environment) -> str:
