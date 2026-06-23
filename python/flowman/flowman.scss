@@ -1,5 +1,12 @@
 /* Flowman SCSS - Adapted from Posting
    A polished, compact TUI for API testing
+
+   Note: Terminal UIs cannot change cursor to "hand pointer" on hover.
+   Instead, we use strong visual feedback:
+   - Reverse video (text-style: reverse)
+   - Background color changes
+   - Bold styling
+   - Border highlights
 */
 
 /* Global scrollbar styling */
@@ -79,14 +86,27 @@ CollectionBrowser {
       border: none;
 
       &:hover {
-        background: $primary-muted;
+        background: $accent-darken-1;
         color: $text;
+        text-style: bold reverse;
+      }
+
+      &:focus {
+        background: $accent-darken-2;
+        color: $text;
+        text-style: bold;
       }
 
       &.active {
         background: $accent;
         color: $background;
         text-style: bold;
+      }
+
+      &.active:hover {
+        background: $accent-lighten-1;
+        color: $background;
+        text-style: bold reverse;
       }
     }
   }
@@ -117,7 +137,18 @@ CollectionTree {
   }
 
   .tree--cursor:hover {
-    background: $primary-muted;
+    background: $accent;
+    color: $background;
+    text-style: bold reverse;
+  }
+
+  .tree--highlight {
+    background: $accent-darken-2;
+  }
+
+  .tree--highlight:hover {
+    background: $accent-darken-1;
+    text-style: reverse;
   }
 }
 
@@ -156,7 +187,16 @@ RequestEditor {
     margin: 1 0 0 0;
 
     &:hover {
-      background: $primary;
+      background: $accent-lighten-2;
+      color: $background;
+      text-style: bold reverse;
+    }
+
+    &:focus {
+      background: $accent-lighten-1;
+      color: $background;
+      text-style: bold;
+      border: heavy $accent-lighten-3;
     }
   }
 
@@ -178,6 +218,14 @@ RequestEditor {
 
         &:hover {
           color: $text;
+          background: $surface-lighten-1;
+          text-style: reverse;
+        }
+
+        &.-active:hover {
+          color: $accent-lighten-2;
+          background: $surface;
+          text-style: bold reverse;
         }
       }
 
