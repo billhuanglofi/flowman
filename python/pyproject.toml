@@ -1,0 +1,20 @@
+[project]
+name = "flowman"
+version = "0.1.0"
+description = "TUI-first API testing tool with clickable terminal interface"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "textual>=0.63.0",
+    "pyyaml>=6.0",
+    "httpx>=0.27.0",
+    "rich>=13.7.0",
+    "click>=8.1.0",
+]
+
+[project.scripts]
+flowman = "flowman.cli:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

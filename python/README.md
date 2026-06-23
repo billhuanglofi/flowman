@@ -1,0 +1,201 @@
+# Flowman Python - Clickable TUI Edition
+
+**A fully mouse-clickable terminal UI for API testing, built with Python and Textual.**
+
+Unlike traditional keyboard-only TUIs, this version is **fully interactive with your mouse** - just like Posting.sh!
+
+---
+
+## 🎯 Features
+
+### ✅ Fully Clickable
+- Click buttons to run requests
+- Click tabs to switch views
+- Click list items to select requests
+- Click environment buttons to switch
+- **No keyboard required!** (but shortcuts still work)
+
+### 🎨 Modern Terminal UI
+- Beautiful CSS-styled interface
+- Syntax-highlighted JSON responses
+- Tabbed response viewer (Body/Headers/Trace)
+- Color-coded status messages
+- Responsive grid layout
+
+### ⌨️ Keyboard Shortcuts (Optional)
+- `r` - Run request
+- `Ctrl+R` - Replay last request
+- `e` - Switch environment
+- `Tab` - Navigate between panels
+- `?` - Show help
+- `q` - Quit
+
+---
+
+## 🚀 Quick Start
+
+### Installation
+
+```bash
+cd python
+pip install -e .
+```
+
+### Run the TUI
+
+```bash
+flowman tui
+```
+
+**That's it!** Now click away! 🖱️
+
+---
+
+## 🖱️ How to Use
+
+### Mouse Interaction
+1. **Click** the "▶ Run Request" button to execute
+2. **Click** environment buttons (UAT/PPD) to switch
+3. **Click** tabs (Body/Headers/Trace) to view different response data
+4. **Click** request list items to select different requests
+5. **Click** anywhere you see a button or interactive element!
+
+### Keyboard Shortcuts
+- All mouse actions also have keyboard shortcuts
+- Press `?` to see all keybindings
+- Use `Tab` to navigate between focusable elements
+- Press `Enter` to activate focused buttons
+
+---
+
+## 📁 Project Structure
+
+```
+python/
+├── flowman/
+│   ├── __init__.py       # Package initialization
+│   ├── app.py            # Main Textual application
+│   ├── cli.py            # Click CLI interface
+│   └── config.py         # YAML config loader (TODO)
+├── requirements.txt      # Python dependencies
+├── pyproject.toml        # Package configuration
+└── README.md            # This file
+```
+
+---
+
+## 🎨 Screenshots
+
+The TUI features:
+- **Left sidebar:** Request list and environment selector
+- **Right panel:** Tabbed response viewer with Body/Headers/Trace
+- **Bottom:** History panel showing recent requests
+- **Top:** Header with title and environment info
+- **Footer:** Keyboard shortcuts reference
+
+All panels are clickable and interactive!
+
+---
+
+## 🔧 Development
+
+### Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### Run in Development Mode
+
+```bash
+cd python
+python -m flowman.app
+```
+
+### Customize Styling
+
+The app uses Textual CSS (similar to regular CSS). Edit the `CSS` string in `app.py` to customize:
+- Colors
+- Borders
+- Layout
+- Spacing
+- Fonts
+
+---
+
+## 🆚 Comparison: Go vs Python
+
+| Feature | Go Version | Python Version |
+|---------|-----------|----------------|
+| **Mouse Support** | ❌ Keyboard only | ✅ Fully clickable |
+| **Speed** | ⚡ Very fast | 🐍 Fast enough |
+| **Dependencies** | None (single binary) | Python + packages |
+| **UI Framework** | Bubble Tea | Textual |
+| **Learning Curve** | Steeper | Easier |
+| **Deployment** | Single binary | pip install |
+
+---
+
+## 🛠️ TODO
+
+### High Priority
+- [ ] Load YAML config files
+- [ ] Actually run HTTP requests (httpx)
+- [ ] Parse environments and requests
+- [ ] Save history to disk
+- [ ] Add request editor dialog
+
+### Medium Priority
+- [ ] Response body redaction (security)
+- [ ] Import from Postman/Insomnia
+- [ ] Export to cURL/HTTP file
+- [ ] Search/filter requests
+- [ ] Request body editor
+
+### Nice to Have
+- [ ] Dark/light theme toggle
+- [ ] Custom color schemes
+- [ ] Plugin system
+- [ ] Request duplication
+- [ ] Bulk operations
+
+---
+
+## 📚 Resources
+
+- **Textual Docs:** https://textual.textualize.io/
+- **Textual Examples:** https://github.com/Textualize/textual/tree/main/examples
+- **Rich Docs:** https://rich.readthedocs.io/
+- **HTTPX Docs:** https://www.python-httpx.org/
+
+---
+
+## 🤝 Why Python + Textual?
+
+**Textual** is specifically designed for building **clickable terminal UIs**. It provides:
+
+1. **Native Mouse Support** - Click buttons, tabs, lists
+2. **CSS Styling** - Modern, beautiful interfaces
+3. **Reactive Components** - Data-driven updates
+4. **Rich Text** - Syntax highlighting, tables, etc.
+5. **Cross-platform** - Works everywhere Python runs
+
+It's what **Posting.sh uses** under the hood!
+
+---
+
+## 📝 License
+
+Same as the main Flowman project.
+
+---
+
+## 🎉 Get Started Now!
+
+```bash
+cd python
+pip install -e .
+flowman tui
+```
+
+**Then click away!** 🖱️✨
