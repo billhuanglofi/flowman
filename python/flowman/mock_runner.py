@@ -62,70 +62,308 @@ class MockRunner:
         return response
 
     def _generate_trace(self, request: Request, environment: Environment, duration_ms: float) -> Dict:
-        """Generate realistic HTTP trace data"""
-        dns_time = 5 + (self.call_count % 10)
-        tcp_time = 15 + (self.call_count % 20)
-        tls_time = 25 + (self.call_count % 30)
-        server_time = duration_ms - dns_time - tcp_time - tls_time - 10
-        transfer_time = 5 + (self.call_count % 8)
+        """Generate realistic process_state journey trace"""
+        txn_id = f"TXN{self.call_count:010d}"
+
+        # Generate journey rows based on request type
+        rows = []
+
+        if "payment" in request.name.lower():
+            rows = self._generate_payment_journey(txn_id, request)
+        elif "user" in request.name.lower():
+            rows = self._generate_user_journey(txn_id, request)
+        elif "order" in request.name.lower():
+            rows = self._generate_order_journey(txn_id, request)
+        else:
+            rows = self._generate_generic_journey(txn_id, request)
 
         return {
-            "request_id": f"req_{self.call_count:06d}",
-            "timestamps": {
-                "dns_start": 0,
-                "dns_end": dns_time,
-                "tcp_start": dns_time,
-                "tcp_end": dns_time + tcp_time,
-                "tls_start": dns_time + tcp_time,
-                "tls_end": dns_time + tcp_time + tls_time,
-                "request_start": dns_time + tcp_time + tls_time,
-                "request_end": dns_time + tcp_time + tls_time + server_time,
-                "response_start": dns_time + tcp_time + tls_time + server_time,
-                "response_end": duration_ms,
-            },
-            "timings": {
-                "dns_lookup": f"{dns_time:.1f}ms",
-                "tcp_connection": f"{tcp_time:.1f}ms",
-                "tls_handshake": f"{tls_time:.1f}ms",
-                "server_processing": f"{server_time:.1f}ms",
-                "content_transfer": f"{transfer_time:.1f}ms",
-                "total": f"{duration_ms:.1f}ms"
-            },
-            "network": {
-                "local_address": "192.168.1.100:54321",
-                "remote_address": f"{environment.base_url.replace('https://', '').replace('http://', '')}:443",
-                "protocol": "HTTP/2.0",
-                "tls_version": "TLSv1.3",
-                "cipher_suite": "TLS_AES_256_GCM_SHA384"
-            },
-            "request": {
-                "method": request.method,
-                "url": f"{environment.base_url}{request.path or request.endpoint}",
-                "headers_sent": len(request.headers or []) + 4,  # + standard headers
-                "body_size": "0 bytes" if request.method == "GET" else "256 bytes"
-            },
-            "response": {
-                "status_code": 200,
-                "headers_received": 8,
-                "body_size": f"{len(self._get_mock_body(request))} bytes",
-                "compressed": False
-            },
-            "events": [
-                {"time": 0, "event": "DNS lookup started", "detail": f"Resolving {environment.base_url}"},
-                {"time": dns_time, "event": "DNS lookup complete", "detail": "IP: 203.0.113.42"},
-                {"time": dns_time, "event": "TCP connection initiated", "detail": "Connecting to port 443"},
-                {"time": dns_time + tcp_time, "event": "TCP connection established", "detail": "3-way handshake complete"},
-                {"time": dns_time + tcp_time, "event": "TLS handshake started", "detail": "ClientHello sent"},
-                {"time": dns_time + tcp_time + tls_time, "event": "TLS handshake complete", "detail": "Using TLSv1.3"},
-                {"time": dns_time + tcp_time + tls_time, "event": "HTTP request sent", "detail": f"{request.method} {request.path or request.endpoint}"},
-                {"time": dns_time + tcp_time + tls_time + server_time, "event": "Response headers received", "detail": "Status: 200 OK"},
-                {"time": duration_ms, "event": "Response body received", "detail": "Transfer complete"},
-            ]
+            "transaction_id": txn_id,
+            "rows": rows,
+            "warnings": [],
+            "total_steps": len(rows),
+            "duration_ms": duration_ms
         }
 
-    def _get_mock_body(self, request: Request) -> str:
-        """Get sample body for size calculation"""
-        return json.dumps({"status": "success", "data": {}}, indent=2)
+    def _generate_payment_journey(self, txn_id: str, request: Request) -> list:
+        """Generate payment processing journey"""
+        if request.method == "POST":
+            return [
+                {
+                    "step": 1,
+                    "service": "api-gateway",
+                    "state": "RECEIVED",
+                    "outcome": "SUCCESS",
+                    "message": "Request received and validated",
+                    "display_label": "terminal",
+                    "timestamp": "2024-06-23T12:00:00.000Z"
+                },
+                {
+                    "step": 2,
+                    "service": "auth-service",
+                    "state": "AUTHENTICATED",
+                    "outcome": "SUCCESS",
+                    "message": "API key validated",
+                    "display_label": "terminal",
+                    "timestamp": "2024-06-23T12:00:00.015Z"
+                },
+                {
+                    "step": 3,
+                    "service": "payment-validator",
+                    "state": "VALIDATED",
+                    "outcome": "SUCCESS",
+                    "message": "Payment details validated",
+                    "display_label": "terminal",
+                    "timestamp": "2024-06-23T12:00:00.030Z"
+                },
+                {
+                    "step": 4,
+                    "service": "fraud-check",
+                    "state": "APPROVED",
+                    "outcome": "PASS",
+                    "message": "Fraud check passed - low risk",
+                    "display_label": "terminal",
+                    "timestamp": "2024-06-23T12:00:00.050Z"
+                },
+                {
+                    "step": 5,
+                    "service": "payment-processor",
+                    "state": "PROCESSING",
+                    "outcome": "PENDING",
+                    "message": "Sent to payment gateway",
+                    "display_label": "active",
+                    "timestamp": "2024-06-23T12:00:00.070Z"
+                },
+                {
+                    "step": 6,
+                    "service": "payment-processor",
+                    "state": "COMPLETED",
+                    "outcome": "SUCCESS",
+                    "message": "Payment authorized and captured",
+                    "display_label": "terminal",
+                    "timestamp": "2024-06-23T12:00:00.150Z"
+                },
+                {
+                    "step": 7,
+                    "service": "notification-service",
+                    "state": "SENT",
+                    "outcome": "SUCCESS",
+                    "message": "Confirmation email queued",
+                    "display_label": "terminal",
+                    "timestamp": "2024-06-23T12:00:00.160Z"
+                }
+            ]
+        elif request.method == "GET":
+            return [
+                {
+                    "step": 1,
+                    "service": "api-gateway",
+                    "state": "RECEIVED",
+                    "outcome": "SUCCESS",
+                    "message": "Lookup request received",
+                    "display_label": "terminal",
+                    "timestamp": "2024-06-23T12:00:00.000Z"
+                },
+                {
+                    "step": 2,
+                    "service": "auth-service",
+                    "state": "AUTHENTICATED",
+                    "outcome": "SUCCESS",
+                    "message": "Token validated",
+                    "display_label": "terminal",
+                    "timestamp": "2024-06-23T12:00:00.010Z"
+                },
+                {
+                    "step": 3,
+                    "service": "payment-db",
+                    "state": "RETRIEVED",
+                    "outcome": "SUCCESS",
+                    "message": "Payment record found",
+                    "display_label": "terminal",
+                    "timestamp": "2024-06-23T12:00:00.025Z"
+                }
+            ]
+        else:  # DELETE
+            return [
+                {
+                    "step": 1,
+                    "service": "api-gateway",
+                    "state": "RECEIVED",
+                    "outcome": "SUCCESS",
+                    "message": "Delete request received",
+                    "display_label": "terminal",
+                    "timestamp": "2024-06-23T12:00:00.000Z"
+                },
+                {
+                    "step": 2,
+                    "service": "auth-service",
+                    "state": "AUTHENTICATED",
+                    "outcome": "SUCCESS",
+                    "message": "Admin privileges verified",
+                    "display_label": "terminal",
+                    "timestamp": "2024-06-23T12:00:00.010Z"
+                },
+                {
+                    "step": 3,
+                    "service": "payment-service",
+                    "state": "CANCELLED",
+                    "outcome": "SUCCESS",
+                    "message": "Payment cancelled and refunded",
+                    "display_label": "terminal",
+                    "timestamp": "2024-06-23T12:00:00.080Z"
+                }
+            ]
+
+    def _generate_user_journey(self, txn_id: str, request: Request) -> list:
+        """Generate user management journey"""
+        if request.method == "GET":
+            return [
+                {
+                    "step": 1,
+                    "service": "api-gateway",
+                    "state": "RECEIVED",
+                    "outcome": "SUCCESS",
+                    "message": "User lookup request",
+                    "display_label": "terminal",
+                    "timestamp": "2024-06-23T12:00:00.000Z"
+                },
+                {
+                    "step": 2,
+                    "service": "user-db",
+                    "state": "RETRIEVED",
+                    "outcome": "SUCCESS",
+                    "message": "User record found",
+                    "display_label": "terminal",
+                    "timestamp": "2024-06-23T12:00:00.015Z"
+                }
+            ]
+        elif request.method == "PUT":
+            return [
+                {
+                    "step": 1,
+                    "service": "api-gateway",
+                    "state": "RECEIVED",
+                    "outcome": "SUCCESS",
+                    "message": "User update request",
+                    "display_label": "terminal",
+                    "timestamp": "2024-06-23T12:00:00.000Z"
+                },
+                {
+                    "step": 2,
+                    "service": "auth-service",
+                    "state": "AUTHORIZED",
+                    "outcome": "SUCCESS",
+                    "message": "User authorized to modify profile",
+                    "display_label": "terminal",
+                    "timestamp": "2024-06-23T12:00:00.010Z"
+                },
+                {
+                    "step": 3,
+                    "service": "validation-service",
+                    "state": "VALIDATED",
+                    "outcome": "SUCCESS",
+                    "message": "Email format validated",
+                    "display_label": "terminal",
+                    "timestamp": "2024-06-23T12:00:00.020Z"
+                },
+                {
+                    "step": 4,
+                    "service": "user-db",
+                    "state": "UPDATED",
+                    "outcome": "SUCCESS",
+                    "message": "User profile updated",
+                    "display_label": "terminal",
+                    "timestamp": "2024-06-23T12:00:00.040Z"
+                }
+            ]
+        else:
+            return self._generate_generic_journey(txn_id, request)
+
+    def _generate_order_journey(self, txn_id: str, request: Request) -> list:
+        """Generate order processing journey"""
+        if request.method == "POST":
+            return [
+                {
+                    "step": 1,
+                    "service": "api-gateway",
+                    "state": "RECEIVED",
+                    "outcome": "SUCCESS",
+                    "message": "Order creation request",
+                    "display_label": "terminal",
+                    "timestamp": "2024-06-23T12:00:00.000Z"
+                },
+                {
+                    "step": 2,
+                    "service": "inventory-service",
+                    "state": "CHECKED",
+                    "outcome": "SUCCESS",
+                    "message": "All items in stock",
+                    "display_label": "terminal",
+                    "timestamp": "2024-06-23T12:00:00.020Z"
+                },
+                {
+                    "step": 3,
+                    "service": "pricing-service",
+                    "state": "CALCULATED",
+                    "outcome": "SUCCESS",
+                    "message": "Total: $249.00 (tax included)",
+                    "display_label": "terminal",
+                    "timestamp": "2024-06-23T12:00:00.035Z"
+                },
+                {
+                    "step": 4,
+                    "service": "order-db",
+                    "state": "CREATED",
+                    "outcome": "SUCCESS",
+                    "message": "Order record created",
+                    "display_label": "terminal",
+                    "timestamp": "2024-06-23T12:00:00.050Z"
+                }
+            ]
+        else:  # GET
+            return [
+                {
+                    "step": 1,
+                    "service": "api-gateway",
+                    "state": "RECEIVED",
+                    "outcome": "SUCCESS",
+                    "message": "Order query request",
+                    "display_label": "terminal",
+                    "timestamp": "2024-06-23T12:00:00.000Z"
+                },
+                {
+                    "step": 2,
+                    "service": "order-db",
+                    "state": "RETRIEVED",
+                    "outcome": "SUCCESS",
+                    "message": "Found 3 orders",
+                    "display_label": "terminal",
+                    "timestamp": "2024-06-23T12:00:00.020Z"
+                }
+            ]
+
+    def _generate_generic_journey(self, txn_id: str, request: Request) -> list:
+        """Generate generic journey"""
+        return [
+            {
+                "step": 1,
+                "service": "api-gateway",
+                "state": "RECEIVED",
+                "outcome": "SUCCESS",
+                "message": f"{request.method} request received",
+                "display_label": "terminal",
+                "timestamp": "2024-06-23T12:00:00.000Z"
+            },
+            {
+                "step": 2,
+                "service": "backend-service",
+                "state": "PROCESSED",
+                "outcome": "SUCCESS",
+                "message": "Request processed successfully",
+                "display_label": "terminal",
+                "timestamp": "2024-06-23T12:00:00.050Z"
+            }
+        ]
 
     def _mock_get_response(self, request: Request, duration_ms: float) -> MockResponse:
         """Mock GET response"""

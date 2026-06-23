@@ -239,54 +239,72 @@ class ResponseArea(Vertical):
         trace = response.trace
         output = []
 
-        # Request info
-        output.append("═══ REQUEST ═══")
-        if "request" in trace:
-            req = trace["request"]
-            output.append(f"Method:     {req.get('method', 'N/A')}")
-            output.append(f"URL:        {req.get('url', 'N/A')}")
-            output.append(f"Headers:    {req.get('headers_sent', 0)} sent")
-            output.append(f"Body:       {req.get('body_size', '0 bytes')}")
+        # Transaction header
+        txn_id = trace.get("transaction_id", "N/A")
+        output.append(f"TRANSACTION: {txn_id}")
+        output.append("═" * 80)
+        output.append("")
 
-        # Network info
-        output.append("\n═══ NETWORK ═══")
-        if "network" in trace:
-            net = trace["network"]
-            output.append(f"Protocol:   {net.get('protocol', 'N/A')}")
-            output.append(f"TLS:        {net.get('tls_version', 'N/A')}")
-            output.append(f"Cipher:     {net.get('cipher_suite', 'N/A')}")
-            output.append(f"Local:      {net.get('local_address', 'N/A')}")
-            output.append(f"Remote:     {net.get('remote_address', 'N/A')}")
+        # Journey rows
+        rows = trace.get("rows", [])
+        if not rows:
+            output.append("No journey data available")
+            return "\n".join(output)
 
-        # Timings
-        output.append("\n═══ TIMINGS ═══")
-        if "timings" in trace:
-            timings = trace["timings"]
-            output.append(f"DNS Lookup:        {timings.get('dns_lookup', 'N/A')}")
-            output.append(f"TCP Connection:    {timings.get('tcp_connection', 'N/A')}")
-            output.append(f"TLS Handshake:     {timings.get('tls_handshake', 'N/A')}")
-            output.append(f"Server Processing: {timings.get('server_processing', 'N/A')}")
-            output.append(f"Content Transfer:  {timings.get('content_transfer', 'N/A')}")
-            output.append(f"────────────────────────")
-            output.append(f"Total:             {timings.get('total', 'N/A')}")
+        # Table header
+        output.append(f"{'STEP':<6} {'SERVICE':<25} {'STATE':<18} {'OUTCOME':<12} {'MESSAGE'}")
+        output.append("─" * 80)
 
-        # Response info
-        output.append("\n═══ RESPONSE ═══")
-        if "response" in trace:
-            resp = trace["response"]
-            output.append(f"Status:     {resp.get('status_code', 'N/A')}")
-            output.append(f"Headers:    {resp.get('headers_received', 0)} received")
-            output.append(f"Body:       {resp.get('body_size', '0 bytes')}")
-            output.append(f"Compressed: {resp.get('compressed', False)}")
+        # Journey rows with color-coding based on display_label
+        for row in rows:
+            step = str(row.get("step", "?"))
+            service = row.get("service", "unknown")[:24]
+            state = row.get("state", "")[:17]
+            outcome = row.get("outcome", "")[:11]
+            message = row.get("message", "")[:50]
+            display_label = row.get("display_label", "active")
 
-        # Events timeline
-        output.append("\n═══ TIMELINE ═══")
-        if "events" in trace:
-            for event in trace["events"]:
-                time_str = f"{event['time']:>6.1f}ms"
-                output.append(f"{time_str} │ {event['event']}")
-                if event.get('detail'):
-                    output.append(f"         │   {event['detail']}")
+            # Add status indicator based on display_label
+            if display_label == "terminal":
+                indicator = "✓"
+                state_color = "green"
+            elif display_label == "failed":
+                indicator = "✗"
+                state_color = "red"
+            elif display_label == "stuck":
+                indicator = "⚠"
+                state_color = "yellow"
+            else:  # active
+                indicator = "●"
+                state_color = "cyan"
+
+            output.append(
+                f"{indicator} {step:<4} {service:<25} {state:<18} {outcome:<12} {message}"
+            )
+
+        output.append("─" * 80)
+
+        # Summary
+        total_steps = len(rows)
+        terminal_count = sum(1 for r in rows if r.get("display_label") == "terminal")
+        failed_count = sum(1 for r in rows if r.get("display_label") == "failed")
+        stuck_count = sum(1 for r in rows if r.get("display_label") == "stuck")
+
+        output.append("")
+        output.append(f"Total Steps:    {total_steps}")
+        output.append(f"Completed:      {terminal_count}")
+        if failed_count:
+            output.append(f"Failed:         {failed_count}")
+        if stuck_count:
+            output.append(f"Stuck/Active:   {stuck_count}")
+
+        # Warnings
+        warnings = trace.get("warnings", [])
+        if warnings:
+            output.append("")
+            output.append("⚠ WARNINGS:")
+            for warning in warnings:
+                output.append(f"  [{warning.get('code', 'UNKNOWN')}] {warning.get('message', '')}")
 
         return "\n".join(output)
 
