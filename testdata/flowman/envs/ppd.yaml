@@ -1,0 +1,18 @@
+version: v1
+name: ppd
+base_url: https://ppd.api.example.test
+endpoints:
+  - name: payments
+    path: /payments
+oracle:
+  dsn_env: FLOWMAN_PPD_ORACLE_DSN
+  user_env: FLOWMAN_PPD_ORACLE_USER
+  password_env: FLOWMAN_PPD_ORACLE_PASSWORD
+trace:
+  transaction_id:
+    header: X-Transaction-ID
+    json_paths:
+      - $.transaction_id
+      - $.data.transactionId
+  poll_interval: 5s
+  timeout: 45s

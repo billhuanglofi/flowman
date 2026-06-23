@@ -1,0 +1,7 @@
+version: v1
+name: Create Payment Flow
+description: E2E fixture flow for request run and trace coverage.
+steps:
+  - name: Create Payment
+    request: requests/payments/create-payment.request.yaml
+    trace: true

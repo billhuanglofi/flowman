@@ -1,0 +1,7 @@
+version: v1
+name: create payment flow
+description: Demo flow for creating a payment and tracing its PROCESS_STATE journey.
+steps:
+  - name: create payment
+    request: requests/payments/create-payment.request.yaml
+    trace: true

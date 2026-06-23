@@ -1,0 +1,29 @@
+version: v1
+name: Create Payment
+method: POST
+endpoint: payments
+path: /v1/payments
+query:
+  - name: dry_run
+    value: "false"
+headers:
+  - name: Authorization
+    env: FLOWMAN_E2E_AUTHORIZATION
+  - name: X-API-Key
+    env: FLOWMAN_E2E_API_KEY
+  - name: Content-Type
+    value: application/json
+body:
+  mode: json
+  raw: |-
+    {
+      "amount": "12.34",
+      "currency": "USD"
+    }
+trace:
+  transaction_id:
+    header: X-Transaction-ID
+    json_paths:
+      - $.transaction_id
+  poll_interval: 2s
+  timeout: 5s

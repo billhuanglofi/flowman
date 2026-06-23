@@ -1,0 +1,6 @@
+{
+  "transaction_id": "TX-EXAMPLE-001",
+  "timestamp": "2026-06-21T10:01:00Z",
+  "body": "{\"transaction_id\":\"TX-EXAMPLE-001\",\"amount\":\"12.34\"}",
+  "headers": "{\"Content-Type\":\"application/json\"}"
+}

@@ -1,0 +1,13 @@
+version: v1
+name: create payment flow
+description: Fixture flow for creating a payment and tracing its PROCESS_STATE journey.
+steps:
+  - name: create payment
+    request: requests/payment/create.request.yaml
+    trace: true
+  - name: inspect process state
+    request: requests/payment/create.request.yaml
+import_warnings:
+  - code: postman-script-unsupported
+    path: $.item[0].event
+    message: Postman scripts are reported as warnings and are not executable Flowman features.

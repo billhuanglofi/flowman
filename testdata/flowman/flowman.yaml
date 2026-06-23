@@ -1,0 +1,10 @@
+version: v1
+name: flowman-example
+default_env: uat
+environments:
+  - envs/uat.yaml
+  - envs/ppd.yaml
+requests:
+  - requests/payment/create.request.yaml
+flows:
+  - flows/payment/create-payment.flow.yaml

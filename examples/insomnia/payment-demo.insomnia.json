@@ -1,0 +1,37 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "resources": [
+    {
+      "_id": "wrk_1",
+      "_type": "workspace",
+      "name": "Flowman Demo Insomnia"
+    },
+    {
+      "_id": "fld_1",
+      "_type": "request_group",
+      "parentId": "wrk_1",
+      "name": "Payments"
+    },
+    {
+      "_id": "req_1",
+      "_type": "request",
+      "parentId": "fld_1",
+      "name": "Create Payment",
+      "method": "POST",
+      "url": "http://localhost:8080/payments/v1/payments",
+      "parameters": [
+        {"name": "dry_run", "value": "false"},
+        {"name": "source", "value": "insomnia-demo"}
+      ],
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"},
+        {"name": "X-Correlation-ID", "value": "flowman-example-correlation"}
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"amount\": \"12.34\",\n  \"currency\": \"USD\"\n}"
+      }
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "info": {
+    "name": "Flowman Demo Postman",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Create Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "X-Correlation-ID", "value": "flowman-example-correlation"}
+            ],
+            "url": {
+              "raw": "http://localhost:8080/payments/v1/payments?dry_run=false&source=postman-demo",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["payments", "v1", "payments"],
+              "query": [
+                {"key": "dry_run", "value": "false"},
+                {"key": "source", "value": "postman-demo"}
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"12.34\",\n  \"currency\": \"USD\"\n}",
+              "options": {
+                "raw": {"language": "json"}
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

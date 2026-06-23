@@ -1,0 +1,47 @@
+{
+  "info": {
+    "name": "Flowman E2E Unsupported Postman",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Create Payment With Script",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": ["pm.environment.set('safe', 'placeholder');"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "FLOWMAN_AUTH_PLACEHOLDER"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "url": {
+              "raw": "https://api.example.test/payments?dry_run=false",
+              "protocol": "https",
+              "host": ["api", "example", "test"],
+              "path": ["payments"],
+              "query": [
+                {"key": "dry_run", "value": "false"}
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"12.34\"\n}",
+              "options": {
+                "raw": {"language": "json"}
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

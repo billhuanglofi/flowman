@@ -1,0 +1,32 @@
+version: v1
+name: create payment
+method: POST
+endpoint: payments
+path: /v1/payments
+query:
+  - name: dry_run
+    value: "false"
+  - name: source
+    value: example-demo
+headers:
+  - name: Content-Type
+    value: application/json
+  - name: X-Correlation-ID
+    value: flowman-example-correlation
+body:
+  mode: json
+  raw: |-
+    {
+      "amount": "12.34",
+      "currency": "USD",
+      "reference": "example-payment"
+    }
+trace:
+  transaction_id:
+    header: X-Transaction-ID
+    json_paths:
+      - $.transaction_id
+      - $.data.transactionId
+    regex: 'transaction_id=([A-Za-z0-9_-]+)'
+  poll_interval: 2s
+  timeout: 30s

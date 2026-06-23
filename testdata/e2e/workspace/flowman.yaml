@@ -1,0 +1,9 @@
+version: v1
+name: flowman-e2e
+default_env: uat
+environments:
+  - envs/uat.yaml
+requests:
+  - requests/payments/create-payment.request.yaml
+flows:
+  - flows/payments/create-payment.flow.yaml
