@@ -19,13 +19,16 @@ def main():
 @click.option('--config', '-c', type=click.Path(exists=True), help='Config file path')
 @click.option('--env', '-e', default='uat', help='Environment to use')
 @click.option('--theme', default='posting', help='UI theme (posting, cyberpunk, or default)')
-def tui(config, env, theme):
+@click.option('--mock', is_flag=True, help='Use mock HTTP responses (demo mode)')
+def tui(config, env, theme, mock):
     """Launch the interactive TUI (fully clickable!)"""
     click.echo(f"🚀 Starting Flowman TUI...")
     if config:
         click.echo(f"   Config: {config}")
     click.echo(f"   Environment: {env}")
     click.echo(f"   Theme: {theme}")
+    if mock:
+        click.echo(f"   Mode: 🎭 MOCK (demo mode - fake responses)")
     click.echo()
 
     if theme == 'posting':
@@ -41,7 +44,7 @@ def tui(config, env, theme):
     click.echo("💡 Tip: You can click anywhere with your mouse!")
     click.echo()
 
-    run_tui(config_path=config, env_name=env)
+    run_tui(config_path=config, env_name=env, mock_mode=mock)
 
 
 @main.command()

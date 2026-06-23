@@ -241,13 +241,20 @@ class FlowmanApp(App):
         Binding("f1", "help", "Help"),
     ]
 
-    def __init__(self, config_path: str = None, env_name: str = "uat"):
+    def __init__(self, config_path: str = None, env_name: str = "uat", mock_mode: bool = False):
         super().__init__()
         self.config_path = config_path
         self.env_name = env_name
+        self.mock_mode = mock_mode
         self.workspace = None
         self.selected_request = None
-        self.runner = RequestRunner()
+
+        # Use mock or real runner
+        if mock_mode:
+            from flowman.mock_runner import MockRunner
+            self.runner = MockRunner()
+        else:
+            self.runner = RequestRunner()
 
     def compose(self) -> ComposeResult:
         """Create child widgets"""
@@ -316,7 +323,10 @@ class FlowmanApp(App):
 
     def on_mount(self):
         """Initialize UI"""
-        self.query_one("#env-display", Label).update(f"ENV: {self.env_name.upper()}")
+        env_label = f"ENV: {self.env_name.upper()}"
+        if self.mock_mode:
+            env_label += " 🎭"
+        self.query_one("#env-display", Label).update(env_label)
 
         if self.workspace and self.workspace.requests:
             self.selected_request = self.workspace.requests[0]
@@ -378,9 +388,9 @@ class FlowmanApp(App):
         self.notify("Ctrl+J=Send | Ctrl+Q=Quit | j/k=Navigate")
 
 
-def run(config_path: str = None, env_name: str = "uat"):
+def run(config_path: str = None, env_name: str = "uat", mock_mode: bool = False):
     """Run Flowman TUI"""
-    app = FlowmanApp(config_path=config_path, env_name=env_name)
+    app = FlowmanApp(config_path=config_path, env_name=env_name, mock_mode=mock_mode)
     app.run()
 
 
