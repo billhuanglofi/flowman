@@ -194,13 +194,13 @@ func formatBytes(bytes int) string {
 
 var (
 	tabActiveStyle = lipgloss.NewStyle().
-			Background(lipgloss.Color("167")).
-			Foreground(lipgloss.Color("231")).
+			Background(lipgloss.Color("21")).  // Deep blue background
+			Foreground(lipgloss.Color("231")). // White text
 			Bold(true).
 			Padding(0, 2)
 
 	tabInactiveStyle = lipgloss.NewStyle().
-				Background(lipgloss.Color("240")).
-				Foreground(lipgloss.Color("250")).
+				Background(lipgloss.Color("250")). // Light gray background
+				Foreground(lipgloss.Color("16")).  // Black text
 				Padding(0, 2)
 )
